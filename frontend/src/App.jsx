@@ -43,6 +43,7 @@ function App() {
     const saved = localStorage.getItem('visulens_saved');
     return saved ? JSON.parse(saved) : [];
   });
+  const [hiddenPins, setHiddenPins] = useState([]);
 
   useEffect(() => {
     localStorage.setItem('visulens_saved', JSON.stringify(savedPins));
@@ -178,6 +179,10 @@ function App() {
       setSavedPins(prev => [...prev, pin]);
       addNotification('Pin saved successfully!', 'success');
     }
+  };
+
+  const hidePin = (pinUrl) => {
+    setHiddenPins(prev => [...prev, pinUrl]);
   };
 
 
@@ -497,18 +502,29 @@ function App() {
                     <h3 className="text-2xl font-black mb-2">No saved pins yet</h3>
                     <p className="text-gray-500">Start saving pins to see them here!</p>
                   </div>
+                ) : currentView === 'results' && searchResults.length === 0 && !loading ? (
+                  <div className="flex flex-col items-center justify-center py-20">
+                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                      <Search size={40} className="text-gray-400" />
+                    </div>
+                    <h3 className="text-2xl font-black mb-2">NO SIMILAR IMAGES FOUND</h3>
+                    <p className="text-gray-500">Try searching with a different image.</p>
+                  </div>
                 ) : (
                   <Masonry
                     breakpointCols={breakpointColumnsObj}
                     className="masonry-grid"
                     columnClassName="masonry-grid_column"
                   >
-                    {(currentView === 'explore' ? exploreImages : currentView === 'saved' ? savedPins : searchResults).map((pin, idx) => (
+                    {(currentView === 'explore' ? exploreImages : currentView === 'saved' ? savedPins : searchResults)
+                      .filter(pin => !hiddenPins.includes(pin.url))
+                      .map((pin, idx) => (
                       <PinCard
                         key={idx}
                         pin={pin}
                         onSelect={selectPin}
                         onSave={toggleSave}
+                        onHide={hidePin}
                         isSaved={savedPins.some(p => p.url === pin.url)}
                         showMatch={currentView === 'results'}
                         addNotification={addNotification}
@@ -566,6 +582,7 @@ function App() {
               related={relatedPins}
               onBack={() => setCurrentView('explore')}
               onSave={toggleSave}
+              onHide={hidePin}
               isSaved={savedPins.some(p => p.url === selectedPin.url)}
               loading={loading}
               onSelectRelated={selectPin}
@@ -603,9 +620,9 @@ function LandingPage({ onGetStarted, images }) {
         ))}
       </div>
       <div className="landing-hero">
-        <h1 className="landing-title">Get your next <br /> inspiration here</h1>
-        <button onClick={onGetStarted} className="btn-get-started">
-          Get Started
+        <h1 className="landing-title">Get your next <br /> <span className="text-gradient">inspiration here</span></h1>
+        <button onClick={onGetStarted} className="btn-get-started-premium">
+          Get Started <ArrowRight className="ml-2" size={24} />
         </button>
       </div>
     </div>
@@ -693,7 +710,7 @@ function AuthForm({ onSuccess }) {
 }
 
 
-function PinCard({ pin, onSelect, onSave, isSaved, showMatch, addNotification }) {
+function PinCard({ pin, onSelect, onSave, onHide, isSaved, showMatch, addNotification }) {
   const [showOptions, setShowOptions] = useState(false);
 
   const handleDownload = async (e) => {
@@ -741,6 +758,7 @@ function PinCard({ pin, onSelect, onSave, isSaved, showMatch, addNotification })
   const handleHide = (e) => {
     e.stopPropagation();
     setShowOptions(false);
+    if (onHide) onHide(pin.url);
     addNotification('Pin hidden', 'info');
   };
 
@@ -815,7 +833,11 @@ function PinCard({ pin, onSelect, onSave, isSaved, showMatch, addNotification })
   );
 }
 
-function PinDetail({ pin, related, onBack, onSave, isSaved, loading, onSelectRelated, breakpointColumnsObj }) {
+PinCard.propTypes = {
+  // Can add basic proptypes or just structure
+};
+
+function PinDetail({ pin, related, onBack, onSave, isSaved, loading, onSelectRelated, breakpointColumnsObj, onHide }) {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto">
       <button onClick={onBack} className="mb-6 p-3 hover:bg-gray-100 rounded-full">
@@ -860,22 +882,29 @@ function PinDetail({ pin, related, onBack, onSave, isSaved, loading, onSelectRel
             <Loader2 className="animate-spin text-[#e60023]" size={48} />
           </div>
         )}
-        <Masonry
-          breakpointCols={breakpointColumnsObj}
-          className="masonry-grid"
-          columnClassName="masonry-grid_column"
-        >
-          {related.map((rel, idx) => (
-            <PinCard
-              key={idx}
-              pin={rel}
-              onSelect={onSelectRelated}
-              onSave={onSave}
-              isSaved={false}
-              showMatch={true}
-            />
-          ))}
-        </Masonry>
+        {!loading && related.filter(rel => !onHide || !rel.hidden).length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <h3 className="text-2xl font-black mb-2 text-gray-400">NO SIMILAR IMAGES FOUND</h3>
+          </div>
+        ) : (
+          <Masonry
+            breakpointCols={breakpointColumnsObj}
+            className="masonry-grid"
+            columnClassName="masonry-grid_column"
+          >
+            {related.filter(rel => !onHide || !rel.hidden).map((rel, idx) => (
+              <PinCard
+                key={idx}
+                pin={rel}
+                onSelect={onSelectRelated}
+                onSave={onSave}
+                onHide={onHide}
+                isSaved={false}
+                showMatch={true}
+              />
+            ))}
+          </Masonry>
+        )}
       </div>
     </motion.div>
   );

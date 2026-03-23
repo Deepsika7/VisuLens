@@ -1,5 +1,6 @@
 @import "tailwindcss";
-@config "../tailwind.config.js";
+/* @config "../tailwind.config.js"; */
+
 
 
 
@@ -48,28 +49,41 @@ body {
 }
 
 .landing-title {
-  font-size: 64px;
-  font-weight: 700;
-  margin-bottom: 24px;
-  color: #c32aa3;
-  /* Aesthetic pink/purple */
+  font-size: 72px;
+  font-weight: 800;
+  margin-bottom: 32px;
+  color: #111;
+  line-height: 1.1;
+  letter-spacing: -2px;
 }
 
-.btn-get-started {
+.text-gradient {
+  background: linear-gradient(90deg, #e60023, #c32aa3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.btn-get-started-premium {
   background-color: var(--primary);
   color: white;
-  padding: 16px 32px;
-  border-radius: 32px;
-  font-size: 18px;
-  font-weight: 700;
+  padding: 18px 48px;
+  border-radius: 48px;
+  font-size: 20px;
+  font-weight: 800;
   border: none;
   cursor: pointer;
-  transition: transform 0.2s, background-color 0.2s;
+  box-shadow: 0 10px 25px rgba(230, 0, 35, 0.3);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+  margin: 0 auto;
 }
 
-.btn-get-started:hover {
+.btn-get-started-premium:hover {
   background-color: var(--primary-hover);
-  transform: scale(1.05);
+  box-shadow: 0 15px 35px rgba(230, 0, 35, 0.4);
+  transform: translateY(-3px);
 }
 
 .landing-bg-grid {
