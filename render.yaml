@@ -30,7 +30,5 @@ services:
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_BASE
-        fromService:
-          type: web
-          name: visulens-backend
-          property: url
+        # Use interpolation to get the external host and prepend https://
+        value: https://${visulens-backend.host}
