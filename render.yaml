@@ -33,4 +33,4 @@ services:
     envVars:
       - key: VITE_API_BASE
         # Hardcoding the URL to ensure it resolves correctly during the Vite build process
-        value: https://visulens-backend.onrender.com
+        value: https://visulens-backend-fe8n.onrender.com
