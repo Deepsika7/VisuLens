@@ -59,14 +59,16 @@ function App() {
 
   const fetchImages = async () => {
     try {
-      await axios.post(`${API_BASE}/sync`);
+      // Background sync without blocking the UI
+      axios.post(`${API_BASE}/sync`).catch(err => console.error("Sync failed", err));
+      
       const imagesRes = await axios.get(`${API_BASE}/images`);
       const allImages = imagesRes.data.images || [];
       setImages(allImages);
 
       // Select 20-30 random images for the Explore view
       const shuffled = [...allImages].sort(() => 0.5 - Math.random());
-      setExploreImages(shuffled.slice(0, Math.floor(Math.random() * 11) + 20));
+      setExploreImages(shuffled.slice(0, 60)); // Increased from 20 to 50+ to fill empty space
     } catch (err) {
       console.error("Error fetching images", err);
     }
@@ -525,6 +527,8 @@ function App() {
                         onSelect={selectPin}
                         onSave={toggleSave}
                         onHide={hidePin}
+                        onDownload={downloadImage}
+                        onShare={shareImage}
                         isSaved={savedPins.some(p => p.url === pin.url)}
                         showMatch={currentView === 'results'}
                         addNotification={addNotification}
@@ -583,6 +587,8 @@ function App() {
               onBack={() => setCurrentView('explore')}
               onSave={toggleSave}
               onHide={hidePin}
+              onDownload={downloadImage}
+              onShare={shareImage}
               isSaved={savedPins.some(p => p.url === selectedPin.url)}
               loading={loading}
               onSelectRelated={selectPin}
@@ -613,7 +619,7 @@ function LandingPage({ onGetStarted, images }) {
   return (
     <div className="landing-container">
       <div className="landing-bg-grid">
-        {images.slice(0, 20).map((img, i) => (
+        {images.slice(0, 60).map((img, i) => (
           <div key={i} className="rounded-2xl overflow-hidden aspect-[2/3]">
             <img src={`${API_BASE}${img.url}`} className="w-full h-full object-cover" alt="grid" />
           </div>
@@ -710,57 +716,8 @@ function AuthForm({ onSuccess }) {
 }
 
 
-function PinCard({ pin, onSelect, onSave, onHide, isSaved, showMatch, addNotification }) {
+function PinCard({ pin, onSelect, onSave, onHide, onDownload, onShare, isSaved, showMatch, addNotification }) {
   const [showOptions, setShowOptions] = useState(false);
-
-  const handleDownload = async (e) => {
-    e.stopPropagation();
-    try {
-      const response = await fetch(`${API_BASE}${pin.url}`);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = pin.image_name || 'image.jpg';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      addNotification('Image downloaded successfully!', 'success');
-    } catch (err) {
-      console.error('Download failed:', err);
-      addNotification('Failed to download image', 'error');
-    }
-  };
-
-  const handleShare = async (e) => {
-    e.stopPropagation();
-    const shareUrl = `${window.location.origin}${pin.url}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: 'Check out this image on VisuLens',
-          url: shareUrl
-        });
-        addNotification('Shared successfully!', 'success');
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        addNotification('Link copied to clipboard!', 'success');
-      }
-    } catch (err) {
-      console.error('Share failed:', err);
-      if (err.name !== 'AbortError') {
-        addNotification('Failed to share', 'error');
-      }
-    }
-  };
-
-  const handleHide = (e) => {
-    e.stopPropagation();
-    setShowOptions(false);
-    if (onHide) onHide(pin.url);
-    addNotification('Pin hidden', 'info');
-  };
 
   const handleReport = (e) => {
     e.stopPropagation();
@@ -774,8 +731,8 @@ function PinCard({ pin, onSelect, onSave, onHide, isSaved, showMatch, addNotific
       onClick={() => onSelect(pin)}
     >
       <img src={`${API_BASE}${pin.url}`} alt="pin" />
-      <div className="overlay">
-        <div className="flex justify-end pt-2 pr-2">
+      <div className="overlay scale-105 group-hover:scale-100">
+        <div className="flex justify-end p-2">
           <button
             className={`btn-save ${isSaved ? 'bg-black' : ''}`}
             onClick={(e) => onSave(e, pin)}
@@ -791,21 +748,18 @@ function PinCard({ pin, onSelect, onSave, onHide, isSaved, showMatch, addNotific
             </div>
           ) : <div />}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 p-2">
             <button
-              className="btn-util group-hover:flex"
-              onClick={handleShare}
+              className="btn-util w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-white"
+              onClick={(e) => { e.stopPropagation(); onShare(pin.url); }}
               title="Share"
             >
-              <Share size={16} />
+              <Upload size={16} />
             </button>
-            <div className="relative">
+            <div className="relative group/opts">
               <button
-                className="btn-util group-hover:flex"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowOptions(!showOptions);
-                }}
+                className="btn-util w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-white"
+                onClick={(e) => { e.stopPropagation(); setShowOptions(!showOptions); }}
                 title="More options"
               >
                 <MoreHorizontal size={16} />
