@@ -9,7 +9,7 @@ from storage_manager import StorageManager
 import numpy as np
 
 # Load environment variables
-load_dotenv()
+load_dotenv(override=True)
 
 app = Flask(__name__)
 CORS(app)
@@ -17,19 +17,13 @@ CORS(app)
 # Base project directory (backend folder)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Configurations (Absolute paths relative to this script)
+# Configurations (Fixed to internal folders for stability)
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
-DATASET_FOLDER = os.getenv('DATASET_PATH', os.path.join(BASE_DIR, 'dataset'))
-EMBEDDINGS_PATH = os.getenv('EMBEDDINGS_PATH', os.path.join(BASE_DIR, 'embeddings.pkl'))
+DATASET_FOLDER = os.path.join(BASE_DIR, 'dataset')
+EMBEDDINGS_PATH = os.path.join(BASE_DIR, 'embeddings.pkl')
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(DATASET_FOLDER, exist_ok=True)
-
-print(f"--- SERVER CONFIGURATION ---")
-print(f"BASE_DIR: {BASE_DIR}")
-print(f"DATASET_FOLDER: {DATASET_FOLDER}")
-print(f"EMBEDDINGS_PATH: {EMBEDDINGS_PATH}")
-print(f"----------------------------")
 
 # Initialize Modules
 ml = MLModule()
