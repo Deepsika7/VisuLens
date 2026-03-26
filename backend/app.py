@@ -133,9 +133,12 @@ def process_search(filepath):
     
     results = []
     for idx in top_indices:
+        sim_score = float(similarities[idx])
+        if sim_score < 0.75:
+            continue
         results.append({
             "image_name": image_names[idx],
-            "similarity": float(similarities[idx]),
+            "similarity": sim_score,
             "url": f"/dataset/{image_names[idx]}"
         })
 

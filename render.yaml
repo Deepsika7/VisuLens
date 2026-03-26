@@ -1,0 +1,36 @@
+# Render Blueprint for VisuLens (AI Visual Search Engine)
+# This file automates the deployment of both Frontend (Static) and Backend (Docker Web Service)
+
+services:
+  # 1. Backend Service: Flask + ResNet50 (Python Docker)
+  - type: web
+    name: visulens-backend
+    env: docker
+    dockerContext: backend
+    dockerfilePath: backend/Dockerfile
+    # Render assigns dynamic ports; Flask is set to listen on the PORT env var
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+      - key: DATASET_PATH
+        value: dataset
+      - key: EMBEDDINGS_PATH
+        value: embeddings.pkl
+    # NOTE: Disk has been removed to maintain FREE tier eligibility. 
+
+  # 2. Frontend Service: Vite + React (Static Site)
+  - type: static
+    name: visulens-frontend
+    env: static
+    # Point Render to build from the root via the root package.json script
+    buildCommand: cd frontend && npm install && npm run build
+    # Vite builds to frontend/dist as configured in vercel.json / vite.config.js
+    publishDir: frontend/dist
+    envVars:
+      - key: VITE_API_BASE
+        fromService:
+          type: web
+          name: visulens-backend
+          property: url

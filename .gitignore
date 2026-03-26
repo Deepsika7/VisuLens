@@ -24,5 +24,9 @@ build/
 .env.test.local
 .env.production.local
 
-# Images/Dataset (Optional: keep if you want demo images on GitHub)
+# Images/Dataset (Pushing to Git for Render Free Tier persistent storage)
 # dataset/
+# backend/dataset/
+# backend/embeddings.pkl
+backend/uploads/
+backend/users.json

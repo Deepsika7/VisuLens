@@ -10,14 +10,14 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements
 COPY requirements.txt .
 
-# Install dependencies
+# Install dependencies (CPU version of PyTorch to save memory/space)
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend code
+# Copy backend code (including dataset/ and embeddings.pkl)
 COPY . .
 
 # Expose port
 EXPOSE 5000
 
-# Run the application using Gunicorn for production
-CMD ["gunicorn", "app:app", "-w", "2", "-b", "0.0.0.0:5000", "--timeout", "120"]
+# Run with 1 worker to stay within Render Free tier's 512MB RAM limit
+CMD ["gunicorn", "app:app", "-w", "1", "-b", "0.0.0.0:5000", "--timeout", "120"]
