@@ -5,7 +5,7 @@ import { useDropzone } from 'react-dropzone';
 import Masonry from 'react-masonry-css';
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:5000';
 
 function App() {
   const [images, setImages] = useState([]);
@@ -180,6 +180,43 @@ function App() {
     } else {
       setSavedPins(prev => [...prev, pin]);
       addNotification('Pin saved successfully!', 'success');
+    }
+  };
+
+  const downloadImage = async (url) => {
+    try {
+      const response = await fetch(`${API_BASE}${url}`);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = url.split('/').pop();
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      addNotification('Image download started!', 'success');
+    } catch (err) {
+      console.error('Download failed:', err);
+      addNotification('Failed to download image', 'error');
+    }
+  };
+
+  const shareImage = async (url) => {
+    try {
+      const fullUrl = `${window.location.origin}${url}`;
+      if (navigator.share) {
+        await navigator.share({
+          title: 'VisuLens Inspiration',
+          text: 'Check out this inspiration on VisuLens!',
+          url: fullUrl
+        });
+      } else {
+        await navigator.clipboard.writeText(fullUrl);
+        addNotification('Image link copied to clipboard!', 'success');
+      }
+    } catch (err) {
+      console.error('Share failed:', err);
     }
   };
 
@@ -773,8 +810,8 @@ function PinCard({ pin, onSelect, onSave, onHide, onDownload, onShare, isSaved, 
                     exit={{ opacity: 0, scale: 0.95 }}
                     className="dropdown-menu"
                   >
-                    <div className="dropdown-item" onClick={handleDownload}>Download image</div>
-                    <div className="dropdown-item" onClick={handleHide}>Hide Pin</div>
+                    <div className="dropdown-item" onClick={(e) => { e.stopPropagation(); onDownload(pin.url); setShowOptions(false); }}>Download image</div>
+                    <div className="dropdown-item" onClick={(e) => { e.stopPropagation(); onHide(pin.url); setShowOptions(false); }}>Hide Pin</div>
                     <div className="dropdown-item text-red-600" onClick={handleReport}>Report Pin</div>
                   </motion.div>
                 )}

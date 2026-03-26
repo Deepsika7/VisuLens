@@ -96,25 +96,9 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
   padding: 20px;
-  opacity: 0.15;
-  filter: blur(1px);
+  opacity: 0.3;
+  filter: blur(2px);
   pointer-events: none;
-}
-
-.finding-inspiration-toast {
-  position: absolute;
-  top: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  background: white;
-  padding: 12px 24px;
-  border-radius: 40px;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border: 1px solid rgba(0,0,0,0.05);
 }
 
 /* Auth Modal Styles */
@@ -257,17 +241,10 @@ body {
   border: 1px solid rgba(0, 132, 255, 0.2);
 }
 
+/* Pinterest Style Header */
 header {
   border-bottom: 1px solid transparent;
   transition: border-color 0.2s;
-}
-
-.section-title {
-  font-size: 24px;
-  font-weight: 800;
-  margin: 48px 0 32px 0;
-  text-align: center;
-  color: var(--text);
 }
 
 /* Masonry Grid */

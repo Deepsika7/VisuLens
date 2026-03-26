@@ -7,14 +7,14 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 class MLModule:
     def __init__(self):
-        print("Initializing ML Module...")
-        # Load pre-trained ResNet50
-        self.model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
+        print("Initializing ML Module (MobileNetV2 Mode)...")
+        # Load pre-trained MobileNetV2 (Much lighter than ResNet50 for 512MB RAM)
+        self.model = models.mobilenet_v2(weights=models.MobileNet_V2_Weights.IMAGENET1K_V1)
         self.model.eval()
         
-        # Remove the classification layer to get feature embeddings
-        # ResNet50's final layer (before FC) is 2048-dim
-        self.feature_extractor = torch.nn.Sequential(*(list(self.model.children())[:-1]))
+        # Remove the classification layer
+        # MobileNetV2's final features (before classifier) is 1280-dim
+        self.feature_extractor = self.model.features
         
         # Standard ImageNet transforms
         self.transform = transforms.Compose([
