@@ -14,10 +14,13 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# Configurations
-UPLOAD_FOLDER = 'uploads'
-DATASET_FOLDER = os.getenv('DATASET_PATH', '../dataset')
-EMBEDDINGS_PATH = os.getenv('EMBEDDINGS_PATH', 'embeddings.pkl')
+# Base project directory (backend folder)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Configurations (Absolute paths relative to this script)
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+DATASET_FOLDER = os.getenv('DATASET_PATH', os.path.join(BASE_DIR, 'dataset'))
+EMBEDDINGS_PATH = os.getenv('EMBEDDINGS_PATH', os.path.join(BASE_DIR, 'embeddings.pkl'))
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(DATASET_FOLDER, exist_ok=True)
