@@ -21,13 +21,13 @@ services:
     # NOTE: Disk has been removed to maintain FREE tier eligibility. 
 
   # 2. Frontend Service: Vite + React (Static Site)
-  - type: static
+  - type: web
     name: visulens-frontend
     env: static
     # Point Render to build from the root via the root package.json script
     buildCommand: cd frontend && npm install && npm run build
-    # Vite builds to frontend/dist as configured in vercel.json / vite.config.js
-    publishDir: frontend/dist
+    # Directory to publish
+    staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_BASE
         fromService:
