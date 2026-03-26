@@ -32,5 +32,5 @@ services:
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_BASE
-        # Use interpolation to get the external host and prepend https://
-        value: https://${visulens-backend.host}
+        # Hardcoding the URL to ensure it resolves correctly during the Vite build process
+        value: https://visulens-backend.onrender.com
