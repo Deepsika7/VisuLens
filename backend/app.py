@@ -25,6 +25,12 @@ EMBEDDINGS_PATH = os.getenv('EMBEDDINGS_PATH', os.path.join(BASE_DIR, 'embedding
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(DATASET_FOLDER, exist_ok=True)
 
+print(f"--- SERVER CONFIGURATION ---")
+print(f"BASE_DIR: {BASE_DIR}")
+print(f"DATASET_FOLDER: {DATASET_FOLDER}")
+print(f"EMBEDDINGS_PATH: {EMBEDDINGS_PATH}")
+print(f"----------------------------")
+
 # Initialize Modules
 ml = MLModule()
 storage = StorageManager(embeddings_path=EMBEDDINGS_PATH, dataset_path=DATASET_FOLDER)
@@ -44,6 +50,10 @@ def get_users():
 def save_users(users):
     with open(USERS_FILE, 'w') as f:
         json.dump(users, f)
+
+@app.route('/')
+def health_check():
+    return jsonify({"status": "healthy", "service": "VisuLens Backend", "images_indexed": len(storage.data)})
 
 @app.route('/signup', methods=['POST'])
 def signup():
