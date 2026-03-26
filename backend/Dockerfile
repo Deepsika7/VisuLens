@@ -20,4 +20,4 @@ COPY . .
 EXPOSE 5000
 
 # Run with 1 worker to stay within Render Free tier's 512MB RAM limit
-CMD ["gunicorn", "app:app", "-w", "1", "-b", "0.0.0.0:5000", "--timeout", "120"]
+CMD ["sh", "-c", "gunicorn app:app -w 1 -b 0.0.0.0:${PORT:-10000} --timeout 120"]
