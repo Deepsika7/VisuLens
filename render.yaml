@@ -6,6 +6,8 @@ services:
   - type: web
     name: visulens-backend
     env: docker
+    plan: free
+    region: oregon 
     dockerContext: backend
     dockerfilePath: backend/Dockerfile
     # Render assigns dynamic ports; Flask is set to listen on the PORT env var
@@ -24,6 +26,7 @@ services:
   - type: web
     name: visulens-frontend
     env: static
+    plan: free
     # Point Render to build from the root via the root package.json script
     buildCommand: cd frontend && npm install && npm run build
     # Directory to publish
