@@ -26,7 +26,6 @@ services:
   - type: web
     name: visulens-frontend
     env: static
-    plan: free
     # Point Render to build from the root via the root package.json script
     buildCommand: cd frontend && npm install && npm run build
     # Directory to publish
