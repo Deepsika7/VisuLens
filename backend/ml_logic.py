@@ -7,13 +7,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 class MLModule:
     def __init__(self):
-        print("Initializing ML Module (ResNet50)...")
-        # Load pre-trained ResNet50 (2048-dimensional features)
-        self.model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
-        # Remove the classification head (fc layer)
-        self.model = torch.nn.Sequential(*(list(self.model.children())[:-1]))
-        self.model.eval()
-        
+        print("Initializing ML Module (Lazy Load ResNet50)...")
         # Standard ImageNet transforms
         self.transform = transforms.Compose([
             transforms.Resize(256),
@@ -23,16 +17,34 @@ class MLModule:
         ])
 
     def extract_features(self, image_path):
-        """Extract a 2048-dimensional embedding from an image."""
+        """Extract a 2048-dimensional embedding from an image (Memory Optimized)."""
+        import gc
+        # Minimize PyTorch memory usage for CPU
+        torch.set_num_threads(1)
+        
+        print("Loading ResNet50 model temporarily for inference...")
         try:
+            # Lazy load the model only when extracting features
+            model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
+            model = torch.nn.Sequential(*(list(model.children())[:-1]))
+            model.eval()
+
             image = Image.open(image_path).convert('RGB')
             image_tensor = self.transform(image).unsqueeze(0)
             
             with torch.no_grad():
-                features = self.model(image_tensor)
+                features = model(image_tensor)
             
             # Flatten to 1D array
-            return features.flatten().numpy()
+            result = features.flatten().numpy()
+            
+            # Aggressive cleanup 
+            del model
+            del image_tensor
+            gc.collect()
+            
+            return result
+            
         except Exception as e:
             print(f"Error extracting features from {image_path}: {e}")
             return None
