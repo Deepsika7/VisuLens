@@ -6,9 +6,7 @@ venv/
 .venv/
 backend/venv/
 backend/__pycache__/
-backend/users.json
 backend/.env
-backend/embeddings.pkl
 backend/uploads/
 
 # Node
@@ -24,9 +22,5 @@ build/
 .env.test.local
 .env.production.local
 
-# Images/Dataset (Pushing to Git for Render Free Tier persistent storage)
-# dataset/
-# backend/dataset/
-# backend/embeddings.pkl
+# Images/Dataset committed for Render Docker build
 backend/uploads/
-backend/users.json

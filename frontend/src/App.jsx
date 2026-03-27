@@ -57,20 +57,30 @@ function App() {
     fetchImages();
   }, []);
 
-  const fetchImages = async () => {
+  const [backendWaking, setBackendWaking] = useState(false);
+
+  const fetchImages = async (retryCount = 0) => {
     try {
-      // Background sync without blocking the UI
-      axios.post(`${API_BASE}/sync`).catch(err => console.error("Sync failed", err));
-      
-      const imagesRes = await axios.get(`${API_BASE}/images`);
+      const imagesRes = await axios.get(`${API_BASE}/images`, { timeout: 15000 });
       const allImages = imagesRes.data.images || [];
       setImages(allImages);
+      setBackendWaking(false);
 
-      // Select 20-30 random images for the Explore view
+      // Shuffle for the Explore view
       const shuffled = [...allImages].sort(() => 0.5 - Math.random());
-      setExploreImages(shuffled.slice(0, 60)); // Increased from 20 to 50+ to fill empty space
+      setExploreImages(shuffled.slice(0, 60));
+
+      // Background sync without blocking the UI
+      axios.post(`${API_BASE}/sync`).catch(err => console.error("Sync failed", err));
     } catch (err) {
-      console.error("Error fetching images", err);
+      if (retryCount < 5) {
+        setBackendWaking(true);
+        console.log(`Backend not ready, retrying in 8s... (attempt ${retryCount + 1}/5)`);
+        setTimeout(() => fetchImages(retryCount + 1), 8000);
+      } else {
+        setBackendWaking(false);
+        console.error("Backend unavailable after retries:", err);
+      }
     }
   };
 
@@ -500,7 +510,7 @@ function App() {
         <AnimatePresence mode="wait">
           {currentView === 'landing' && (
             <motion.div key="landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <LandingPage onGetStarted={() => setCurrentView('explore')} images={exploreImages} />
+              <LandingPage onGetStarted={() => setCurrentView('explore')} images={exploreImages} backendWaking={backendWaking} />
             </motion.div>
           )}
 
@@ -652,7 +662,7 @@ function App() {
   );
 }
 
-function LandingPage({ onGetStarted, images }) {
+function LandingPage({ onGetStarted, images, backendWaking }) {
   return (
     <div className="landing-container">
       <div className="landing-bg-grid">
@@ -667,6 +677,12 @@ function LandingPage({ onGetStarted, images }) {
         <button onClick={onGetStarted} className="btn-get-started-premium">
           Get Started <ArrowRight className="ml-2" size={24} />
         </button>
+        {backendWaking && (
+          <div className="mt-4 flex items-center gap-2 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow text-sm text-gray-600 animate-pulse">
+            <Loader2 size={16} className="animate-spin text-[#e60023]" />
+            <span>AI server warming up… ready in ~30s</span>
+          </div>
+        )}
       </div>
     </div>
   );

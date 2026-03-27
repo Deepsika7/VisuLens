@@ -30,9 +30,9 @@ ml = MLModule()
 storage = StorageManager(embeddings_path=EMBEDDINGS_PATH, dataset_path=DATASET_FOLDER)
 storage.load_embeddings()
 
-# Simple User Storage (JSON)
+# Simple User Storage (JSON) - stored inside /app (Docker-safe absolute path)
 import json
-USERS_FILE = 'users.json'
+USERS_FILE = os.path.join(BASE_DIR, 'users.json')
 if not os.path.exists(USERS_FILE):
     with open(USERS_FILE, 'w') as f:
         json.dump({}, f)
