@@ -14,13 +14,11 @@ services:
     envVars:
       - key: FLASK_ENV
         value: production
-      - key: PORT
-        value: "5000"
       - key: DATASET_PATH
         value: dataset
       - key: EMBEDDINGS_PATH
         value: embeddings.pkl
-    # NOTE: Disk has been removed to maintain FREE tier eligibility. 
+    # NOTE: Disk has been removed to maintain FREE tier eligibility.
 
   # 2. Frontend Service: Vite + React (Static Site)
   - type: web

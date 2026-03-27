@@ -16,8 +16,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend code (including dataset/ and embeddings.pkl)
 COPY . .
 
-# Expose port
-EXPOSE 5000
+# Expose port (Render injects PORT env var dynamically)
+EXPOSE $PORT
 
-# Run with 1 worker to stay within Render Free tier's 512MB RAM limit
-CMD ["sh", "-c", "gunicorn app:app -w 1 -b 0.0.0.0:${PORT:-10000} --timeout 120"]
+# Run with 1 worker (Render Free tier 512MB RAM limit)
+# --timeout 300 gives ResNet50 time to load without gunicorn killing the worker
+CMD ["sh", "-c", "gunicorn app:app -w 1 -b 0.0.0.0:${PORT:-10000} --timeout 300 --preload"]
