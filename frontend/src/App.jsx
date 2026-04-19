@@ -28,6 +28,27 @@ function App() {
   const [notificationHistory, setNotificationHistory] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
+  const [chatMessages, setChatMessages] = useState([
+    { text: "Hi! How can I help you find inspiration today?", isBot: true }
+  ]);
+  const [chatInput, setChatInput] = useState('');
+
+  const sendChatMessage = (e) => {
+    if (e) e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const userMsg = { text: chatInput, isBot: false };
+    setChatMessages(prev => [...prev, userMsg]);
+    setChatInput('');
+
+    // Simulate bot response
+    setTimeout(() => {
+      setChatMessages(prev => [...prev, {
+        text: "That sounds interesting! I'll keep that in mind for your searches.",
+        isBot: true
+      }]);
+    }, 1000);
+  };
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const addNotification = (message, type = 'info') => {
@@ -232,6 +253,7 @@ function App() {
 
   const hidePin = (pinUrl) => {
     setHiddenPins(prev => [...prev, pinUrl]);
+    addNotification('Pin hidden from view', 'info');
   };
 
 
@@ -431,23 +453,13 @@ function App() {
 
               <AnimatePresence>
                 {showMessages && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="absolute top-full right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 w-80 h-96 z-50 flex flex-col"
-                  >
-                    <div className="p-4 border-b border-gray-100">
-                      <h3 className="font-bold text-lg">Messages</h3>
-                    </div>
-                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                        <MessageCircle size={32} className="text-gray-400" />
-                      </div>
-                      <h4 className="font-bold text-gray-900 mb-1">No chats found</h4>
-                      <p className="text-sm text-gray-500">Start a conversation to see your messages here.</p>
-                    </div>
-                  </motion.div>
+                  <ChatWindow
+                    messages={chatMessages}
+                    input={chatInput}
+                    setInput={setChatInput}
+                    onSend={sendChatMessage}
+                    onClose={() => setShowMessages(false)}
+                  />
                 )}
               </AnimatePresence>
             </div>
@@ -536,11 +548,9 @@ function App() {
             >
               <div className="relative">
                 {loading && (
-                  <div className="absolute inset-x-0 -top-4 z-50 flex justify-center">
-                    <div className="bg-white px-4 py-2 rounded-full shadow-lg border border-gray-100 flex items-center gap-2">
-                      <Loader2 className="animate-spin text-[#e60023]" size={20} />
-                      <span className="font-bold text-sm">Finding inspiration...</span>
-                    </div>
+                  <div className="centered-loader">
+                    <Loader2 className="animate-spin text-[#e60023]" size={40} />
+                    <span className="shimmer-text text-xl">Fetching images...</span>
                   </div>
                 )}
                 {currentView === 'saved' && savedPins.length === 0 ? (
@@ -553,11 +563,11 @@ function App() {
                   </div>
                 ) : currentView === 'results' && searchResults.length === 0 && !loading ? (
                   <div className="flex flex-col items-center justify-center py-20">
-                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                      <Search size={40} className="text-gray-400" />
+                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-300">
+                      <ImageIcon size={60} />
                     </div>
-                    <h3 className="text-2xl font-black mb-2">NO SIMILAR IMAGES FOUND</h3>
-                    <p className="text-gray-500">Try searching with a different image.</p>
+                    <h3 className="text-2xl font-black mb-2 uppercase">No images to see</h3>
+                    <p className="text-gray-500">Find similar searches.</p>
                   </div>
                 ) : (
                   <Masonry
@@ -635,11 +645,12 @@ function App() {
               onSave={toggleSave}
               onHide={hidePin}
               onDownload={downloadImage}
-              onShare={shareImage}
+              shareImage={shareImage}
               isSaved={savedPins.some(p => p.url === selectedPin.url)}
               loading={loading}
               onSelectRelated={selectPin}
               breakpointColumnsObj={breakpointColumnsObj}
+              addNotification={addNotification}
             />
           )}
 
@@ -844,7 +855,15 @@ PinCard.propTypes = {
   // Can add basic proptypes or just structure
 };
 
-function PinDetail({ pin, related, onBack, onSave, isSaved, loading, onSelectRelated, breakpointColumnsObj, onHide }) {
+function PinDetail({ pin, related, onBack, onSave, isSaved, loading, onSelectRelated, breakpointColumnsObj, onHide, onDownload, shareImage, addNotification }) {
+  const [showOptions, setShowOptions] = useState(false);
+
+  const handleReport = (e) => {
+    if (e) e.stopPropagation();
+    setShowOptions(false);
+    addNotification('Pin reported', 'info');
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto">
       <button onClick={onBack} className="mb-6 p-3 hover:bg-gray-100 rounded-full">
@@ -858,8 +877,34 @@ function PinDetail({ pin, related, onBack, onSave, isSaved, loading, onSelectRel
         <div className="p-12 flex flex-col">
           <div className="flex justify-between mb-20">
             <div className="flex gap-4">
-              <IconButton icon={<MoreHorizontal size={24} />} />
-              <IconButton icon={<Share size={24} />} />
+              <div className="relative">
+                <IconButton
+                  icon={<MoreHorizontal size={24} />}
+                  onClick={() => setShowOptions(!showOptions)}
+                />
+                <AnimatePresence>
+                  {showOptions && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="dropdown-menu !top-14"
+                    >
+                      <div className="dropdown-item" onClick={() => { onDownload(pin.url); setShowOptions(false); }}>Download image</div>
+                      <div className="dropdown-item" onClick={() => { onHide(pin.url); setShowOptions(false); onBack(); }}>Hide Pin</div>
+                      <div className="dropdown-item text-red-600" onClick={handleReport}>Report Pin</div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <IconButton
+                icon={<Share size={24} />}
+                onClick={() => shareImage(pin.url)}
+              />
+              <IconButton
+                icon={<Download size={24} />}
+                onClick={() => onDownload(pin.url)}
+              />
             </div>
             <button
               className={`btn-save px-10 py-4 ${isSaved ? 'bg-black' : ''}`}
@@ -882,16 +927,21 @@ function PinDetail({ pin, related, onBack, onSave, isSaved, loading, onSelectRel
         </div>
       </div>
 
-      <h3 className="text-2xl font-black text-center mb-8">More like this</h3>
-      <div className="relative">
+      <div className="sticky top-20 bg-white/80 backdrop-blur-md z-30 py-4 mb-8">
+        <h3 className="text-2xl font-black text-center">More like this</h3>
+      </div>
+      
+      <div className="relative min-h-[400px]">
         {loading && (
-          <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-3xl">
-            <Loader2 className="animate-spin text-[#e60023]" size={48} />
+          <div className="absolute inset-0 z-10 flex flex-col items-center pt-20 bg-white/50 backdrop-blur-sm rounded-3xl">
+            <Loader2 className="animate-spin text-[#e60023] mb-4" size={48} />
+            <span className="shimmer-text text-xl">Fetching images...</span>
           </div>
         )}
-        {!loading && related.filter(rel => !onHide || !rel.hidden).length === 0 ? (
+        {!loading && related.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <h3 className="text-2xl font-black mb-2 text-gray-400">NO SIMILAR IMAGES FOUND</h3>
+            <h3 className="text-2xl font-black mb-2 text-gray-400 uppercase">No images to see</h3>
+            <p className="text-gray-400">Find similar searches.</p>
           </div>
         ) : (
           <Masonry
@@ -899,15 +949,18 @@ function PinDetail({ pin, related, onBack, onSave, isSaved, loading, onSelectRel
             className="masonry-grid"
             columnClassName="masonry-grid_column"
           >
-            {related.filter(rel => !onHide || !rel.hidden).map((rel, idx) => (
+            {related.map((rel, idx) => (
               <PinCard
                 key={idx}
                 pin={rel}
                 onSelect={onSelectRelated}
                 onSave={onSave}
                 onHide={onHide}
+                onDownload={onDownload}
+                onShare={shareImage}
                 isSaved={false}
                 showMatch={true}
+                addNotification={addNotification}
               />
             ))}
           </Masonry>
@@ -965,6 +1018,51 @@ function Profile({ user, onLogout, addNotification }) {
         </button>
       </div>
     </div>
+  );
+}
+
+function ChatWindow({ messages, input, setInput, onSend, onClose }) {
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 20, scale: 0.95 }}
+      className="chat-window"
+    >
+      <div className="chat-header">
+        <h3 className="font-bold">Messages</h3>
+        <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full text-gray-400">
+          <ChevronDown size={20} />
+        </button>
+      </div>
+      <div className="chat-messages" ref={scrollRef}>
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`message ${msg.isBot ? 'message-bot' : 'message-user'}`}>
+            {msg.text}
+          </div>
+        ))}
+      </div>
+      <form className="chat-input-area" onSubmit={onSend}>
+        <input
+          type="text"
+          className="chat-input"
+          placeholder="New message"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+        <button type="submit" className="p-2 bg-[#e60023] text-white rounded-full hover:bg-[#ad001a] transition-colors">
+          <ArrowRight size={18} />
+        </button>
+      </form>
+    </motion.div>
   );
 }
 

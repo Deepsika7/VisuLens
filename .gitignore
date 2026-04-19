@@ -24,3 +24,6 @@ build/
 
 # Images/Dataset committed for Render Docker build
 backend/uploads/
+
+start_visulens.bat
+run_visulens_hidden.vbs

@@ -8,7 +8,74 @@
 ### 🟢 Criterion 1: Core AI Logic & Backend Pipeline
 The VisuLens engine is built on a high-performance AI pipeline that processes image content rather than tags or metadata.
 
-- **AI Model**: We utilize a **ResNet50** deep learning model pre-trained on ImageNet. By stripping the classification head, we extract a **2048-dimensional feature vector** (embedding) for every image.
+- **AI Model**: We utilize a **ResNet50** deep learning model pre-trained on ImageNet. By stripping the classification head, we ext
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ract a **2048-dimensional feature vector** (embedding) for every image.
 - **The Pipeline**:
     1.  **Ingestion**: User provides an Image File or URL.
     2.  **Transformation**: `ml_logic.py` resizes, center-crops, and normalizes the image to torch-standard format.
